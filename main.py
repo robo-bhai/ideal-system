@@ -3,9 +3,9 @@ import os
 import pandas as pd
 from binance.client import Client
 
-# REPLACEMENT: IP block bypass karne ke liye alternative open global endpoint use kiya hai
+# Cloud Server/GitHub Actions IP bypass line
 client = Client()
-client.API_URL = 'https://api1.binance.com' # Bypasses cloud filters
+client.API_URL = 'https://api1.binance.com'
 
 WATCHLIST = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"]
 
@@ -94,7 +94,7 @@ def compute_institutional_metrics(coin):
         if current_price >= (recent_resistance - (0.1 * atr)) and rsi > 60 and volume_spike:
             market_action = "🔴 SHORT (Pullback)"
             confidence_score = "85%"
-        elif current_price < recent_support handbag prev_price >= recent_support and volume_spike:
+        elif current_price < recent_support and prev_price >= recent_support and volume_spike:
             market_action = "🔴 SHORT (Breakdown)"
             confidence_score = "90%"
     elif macro_trend == "SIDEWAYS_RANGE":
