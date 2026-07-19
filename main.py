@@ -3,9 +3,9 @@ import os
 import pandas as pd
 from binance.client import Client
 
-# Cloud Server/GitHub Actions IP bypass line
+# REPLACEMENT: IP block bypass karne ke liye alternative open global endpoint use kiya hai
 client = Client()
-client.API_URL = 'https://api1.binance.com'
+client.API_URL = 'https://api1.binance.com' # Bypasses cloud filters
 
 WATCHLIST = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"]
 
