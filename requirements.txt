@@ -1,3 +1,4 @@
-pandas
+pandas==1.5.3
 python-binance
-https://github.com/twopirllc/pandas-ta/archive/refs/heads/development.zip
+pandas-ta
+
