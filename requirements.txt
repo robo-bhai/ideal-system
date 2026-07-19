@@ -1,4 +1,5 @@
 pandas
-pandas-ta
 python-binance
+git+https://github.com/twopirllc/pandas-ta.git@development
+
 
