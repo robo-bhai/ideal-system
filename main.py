@@ -1,7 +1,6 @@
 import time
 import os
 import pandas as pd
-import pandas_ta as ta
 from binance.client import Client
 
 # Client Setup (Public market data infrastructure)
@@ -9,9 +8,24 @@ client = Client()
 
 WATCHLIST = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"]
 
-def clear_terminal():
-    # GitHub logs mein clear_terminal kaam nahi karega, ye sirf local testing ke liye hai.
-    os.system('cls' if os.name == 'nt' else 'clear')
+# ---- Native Mathematical Indicators (Bina pandas-ta k) ----
+def calculate_ema(series, length):
+    return series.ewm(span=length, adjust=False).mean()
+
+def calculate_rsi(series, length=14):
+    delta = series.diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=length).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=length).mean()
+    rs = gain / (loss + 1e-10)
+    return 100 - (100 / (1 + rs))
+
+def calculate_atr(df, length=14):
+    high_low = df['high'] - df['low']
+    high_cp = (df['high'] - df['close'].shift()).abs()
+    low_cp = (df['low'] - df['close'].shift()).abs()
+    tr = pd.concat([high_low, high_cp, low_cp], axis=1).max(axis=1)
+    return tr.rolling(window=length).mean()
+# --------------------------------------------------------
 
 def fetch_market_pipeline(coin, interval, limit=150):
     try:
@@ -35,8 +49,8 @@ def compute_institutional_metrics(coin):
     if df_4h is None or df_15m is None:
         return None
         
-    df_4h['EMA_50'] = ta.ema(df_4h['close'], length=50)
-    df_4h['EMA_200'] = ta.ema(df_4h['close'], length=200)
+    df_4h['EMA_50'] = calculate_ema(df_4h['close'], length=50)
+    df_4h['EMA_200'] = calculate_ema(df_4h['close'], length=200)
     latest_4h_close = df_4h['close'].iloc[-1]
     ema_50_4h = df_4h['EMA_50'].iloc[-1]
     ema_200_4h = df_4h['EMA_200'].iloc[-1]
@@ -48,10 +62,10 @@ def compute_institutional_metrics(coin):
     else:
         macro_trend = "SIDEWAYS_RANGE"
 
-    df_15m['EMA_21'] = ta.ema(df_15m['close'], length=21)
-    df_15m['RSI'] = ta.rsi(df_15m['close'], length=14)
-    df_15m['ATR'] = ta.atr(df_15m['high'], df_15m['low'], df_15m['close'], length=14)
-    df_15m['Vol_Avg'] = ta.sma(df_15m['volume'], length=20)
+    df_15m['EMA_21'] = calculate_ema(df_15m['close'], length=21)
+    df_15m['RSI'] = calculate_rsi(df_15m['close'], length=14)
+    df_15m['ATR'] = calculate_atr(df_15m, length=14)
+    df_15m['Vol_Avg'] = df_15m['volume'].rolling(window=20).mean()
     df_15m['Swing_High'] = df_15m['high'].rolling(window=10, center=True).max()
     df_15m['Swing_Low'] = df_15m['low'].rolling(window=10, center=True).min()
     
@@ -94,13 +108,12 @@ def compute_institutional_metrics(coin):
         "Coin": coin,
         "Price": f"${current_price:,.2f}",
         "Macro Bias": macro_trend.replace("_", " "),
-        "RSI": round(rsi, 1),
+        "RSI": round(rsi, 1) if not pd.isna(rsi) else 0.0,
         "Action": market_action,
         "Conf": confidence_score
     }
 
 def run_production_dashboard():
-    # 6 Hour Timeout Logic
     start_time = time.time()
     duration_limit = 5.9 * 3600 # 5 hours 54 minutes
     
@@ -114,14 +127,14 @@ def run_production_dashboard():
             
             print(f"--- Pulse: {time.strftime('%H:%M:%S')} ---")
             for row in dashboard_rows:
-                print(f"{row['Coin']} | {row['Price']} | {row['Action']} | {row['Conf']}")
+                print(f"{row['Coin']} | {row['Price']} | Bias: {row['Macro Bias']} | RSI: {row['RSI']} | {row['Action']} | {row['Conf']}")
             
             time.sleep(10)
-        except Exception:
+        except Exception as e:
             time.sleep(5)
             continue
     print("Job completed: 6-hour limit reached.")
 
 if __name__ == "__main__":
     run_production_dashboard()
-
+    
