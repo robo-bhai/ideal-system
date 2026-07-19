@@ -3,12 +3,12 @@ import os
 import pandas as pd
 from binance.client import Client
 
-# Client Setup (Public market data infrastructure)
-client = Client()
+# REPLACEMENT: Cloud Server/GitHub Actions IP bypass lagayi hai
+client = Client(testnet=True) 
 
 WATCHLIST = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"]
 
-# ---- Native Mathematical Indicators (Bina pandas-ta k) ----
+# ---- Native Mathematical Indicators ----
 def calculate_ema(series, length):
     return series.ewm(span=length, adjust=False).mean()
 
